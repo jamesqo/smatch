@@ -163,31 +163,20 @@ class AMR(object):
         print(self.__str__(), file=DEBUG_LOG)
 
     @staticmethod
-    def get_amr_line(input_f):
+    def get_amr_lines(input_f):
         """
         Read the file containing AMRs. AMRs are separated by a blank line.
-        Each call of get_amr_line() returns the next available AMR (in one-line form).
-        Note: this function does not verify if the AMR is valid
-
+        Returns an iterable that yields the AMR line-by-line.
         """
-        cur_amr = []
-        has_content = False
         for line in input_f:
             line = line.strip()
             if line == "":
-                if not has_content:
-                    # empty lines before current AMR
-                    continue
-                else:
-                    # end of current AMR
-                    break
+                continue
             if line.strip().startswith("#"):
                 # ignore the comment line (starting with "#") in the AMR file
                 continue
             else:
-                has_content = True
-                cur_amr.append(line.strip())
-        return "".join(cur_amr)
+                yield line
 
     @staticmethod
     def parse_AMR_line(line):

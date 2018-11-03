@@ -50,7 +50,7 @@ def build_arg_parser():
 
     """
     parser = argparse.ArgumentParser(description="Smatch calculator -- arguments")
-    parser.add_argument('-f', nargs=2, required=True, type=argparse.FileType('r'),
+    parser.add_argument('-f', nargs=2, required=True, type=argparse.FileType('r', encoding='utf-8'),
                         help='Two files containing AMR pairs. AMRs in each file are separated by a single blank line')
     parser.add_argument('-r', type=int, default=4, help='Restart number (Default:4)')
     parser.add_argument('--significant', type=int, default=2, help='significant digits to output (default: 2)')
@@ -700,21 +700,16 @@ def generate_amr_lines(f1, f2):
     :param f2: file handle (or any iterable of strings) to read AMR 2 lines from
     :return: generator of cur_amr1, cur_amr2 pairs: one-line AMR strings
     """
-    while True:
-        cur_amr1 = amr.AMR.get_amr_line(f1)
-        cur_amr2 = amr.AMR.get_amr_line(f2)
-        if not cur_amr1 and not cur_amr2:
-            pass
-        elif not cur_amr1:
-            print("Error: File 1 has less AMRs than file 2", file=ERROR_LOG)
-            print("Ignoring remaining AMRs", file=ERROR_LOG)
-        elif not cur_amr2:
-            print("Error: File 2 has less AMRs than file 1", file=ERROR_LOG)
-            print("Ignoring remaining AMRs", file=ERROR_LOG)
-        else:
-            yield cur_amr1, cur_amr2
-            continue
-        break
+    lines1 = list(amr.AMR.get_amr_lines(f1))
+    lines2 = list(amr.AMR.get_amr_lines(f2))
+    if len(lines1) < len(lines2):
+        print("Error: File 1 has less AMRs than file 2", file=ERROR_LOG)
+        print("Ignoring remaining AMRs", file=ERROR_LOG)
+    elif len(lines1) > len(lines2):
+        print("Error: File 2 has less AMRs than file 1", file=ERROR_LOG)
+        print("Ignoring remaining AMRs", file=ERROR_LOG)
+    else:
+        return zip(lines1, lines2)
 
 
 def get_amr_match(cur_amr1, cur_amr2, sent_num=1, justinstance=False, justattribute=False, justrelation=False):
